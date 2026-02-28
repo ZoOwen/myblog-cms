@@ -2,56 +2,80 @@ const express = require('express')
 const cors = require('cors')
 const helmet = require('helmet')
 const morgan = require('morgan')
+
 const { NODE_ENV } = require('./src/config/env')
 const { errorHandler } = require('./src/middlewares/error.middleware')
 const { apiLimiter } = require('./src/middlewares/rateLimit.middleware')
 
+const mongoSanitize = require('express-mongo-sanitize')
+const xss = require('xss-clean')
+const hpp = require('hpp')
+
 const app = express()
 
-// ── Security
+
+// ================= SECURITY =================
+
 app.use(helmet())
 
-// ── CORS
+
+// ================= CORS (FIX Railway) =================
+
 app.use(cors({
-  origin: NODE_ENV === 'production'
-    ? ['https://yourdomain.com']
-    : ['http://localhost:3000', 'http://localhost:5173'],
-  credentials: true,
+  origin: true,
+  credentials: true
 }))
 
-// ── Body Parser
+
+// ================= BODY PARSER =================
+
 app.use(express.json({ limit: '10kb' }))
 app.use(express.urlencoded({ extended: true, limit: '10kb' }))
 
-const mongoSanitize = require('express-mongo-sanitize')
-const xss           = require('xss-clean')
-const hpp           = require('hpp')
 
-app.use(mongoSanitize())   // NoSQL injection prevention
-app.use(xss())             // XSS prevention
+// ================= SANITIZE =================
+
+app.use(mongoSanitize())
+app.use(xss())
 app.use(hpp({
   whitelist: ['sort', 'fields', 'page', 'limit', 'category', 'tag']
 }))
 
-// ── Logger
+
+// ================= LOGGER =================
+
 if (NODE_ENV === 'development') {
+
   app.use(morgan('dev'))
+
 }
 
-// ── Rate Limiter
+
+// ================= RATE LIMIT =================
+
 app.use('/api', apiLimiter)
 
-// ── Health Check
-app.get('/api/health', (req, res) => {
-  res.json({
-    status:    'success',
-    message:   'Server is running 🟢',
-    env:       NODE_ENV,
-    timestamp: new Date().toISOString(),
-  })
+
+// ================= HEALTH CHECK (WAJIB BUAT RAILWAY) =================
+
+app.get('/', (req, res) => {
+
+  res.status(200).send('🚀 API LIVE')
+
 })
 
-// ── Routes
+app.get('/api/health', (req, res) => {
+
+  res.status(200).json({
+    status: 'ok',
+    env: NODE_ENV
+  })
+
+})
+
+
+// ================= API ROUTES =================
+
 app.use('/api/auth',        require('./src/routes/auth.routes'))
 app.use('/api/posts',       require('./src/routes/post.routes'))
 app.use('/api/categories',  require('./src/routes/category.routes'))
@@ -60,15 +84,25 @@ app.use('/api/comments',    require('./src/routes/comment.routes'))
 app.use('/api/subscribers', require('./src/routes/subscriber.routes'))
 app.use('/api/analytics',   require('./src/routes/analytic.routes'))
 
-// ── 404 Handler
+
+// ================= NOT FOUND =================
+
 app.use((req, res) => {
+
   res.status(404).json({
-    status:  'error',
-    message: `Route ${req.method} ${req.originalUrl} not found`,
+
+    message: "Route not found"
+
   })
+
 })
 
-// ── Global Error Handler
+
+// ================= ERROR HANDLER =================
+
 app.use(errorHandler)
+
+
+// ================= EXPORT =================
 
 module.exports = app
