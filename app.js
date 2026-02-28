@@ -20,8 +20,18 @@ app.use(cors({
 }))
 
 // ── Body Parser
-app.use(express.json({ limit: '10mb' }))
-app.use(express.urlencoded({ extended: true, limit: '10mb' }))
+app.use(express.json({ limit: '10kb' }))
+app.use(express.urlencoded({ extended: true, limit: '10kb' }))
+
+const mongoSanitize = require('express-mongo-sanitize')
+const xss           = require('xss-clean')
+const hpp           = require('hpp')
+
+app.use(mongoSanitize())   // NoSQL injection prevention
+app.use(xss())             // XSS prevention
+app.use(hpp({
+  whitelist: ['sort', 'fields', 'page', 'limit', 'category', 'tag']
+}))
 
 // ── Logger
 if (NODE_ENV === 'development') {

@@ -1,31 +1,24 @@
 const express = require('express')
-const router = express.Router()
+const router  = express.Router()
+const { protect } = require('../middlewares/auth.middleware')  // ✅
+const { authLimiter } = require('../middlewares/security')
 const {
   register,
   login,
-  getMe,
   refreshToken,
+  logout,
+  getMe,
   updateProfile,
   changePassword,
 } = require('../controllers/auth.controller')
-const { protect } = require('../middlewares/auth.middleware')
-const validate = require('../middlewares/validate.middleware')
-const { authLimiter } = require('../middlewares/rateLimit.middleware')
-const {
-  registerValidator,
-  loginValidator,
-  updateProfileValidator,
-  changePasswordValidator,
-} = require('../validators/auth.validator')
 
-// Public
-router.post('/register', authLimiter, registerValidator, validate, register)
-router.post('/login',    authLimiter, loginValidator,    validate, login)
+// Auth routes dengan brute force protection
+router.post('/register', authLimiter, register)
+router.post('/login',    authLimiter, login)
 router.post('/refresh',  refreshToken)
-
-// Private
-router.get('/me',                protect, getMe)
-router.put('/profile',           protect, updateProfileValidator, validate, updateProfile)
-router.put('/change-password',   protect, changePasswordValidator, validate, changePassword)
+router.post('/logout',   protect, logout)
+router.get('/me',        protect, getMe)
+router.put('/profile',   protect, updateProfile)
+router.put('/password',  protect, changePassword)
 
 module.exports = router

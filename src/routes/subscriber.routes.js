@@ -1,5 +1,7 @@
 const express = require('express')
-const router = express.Router()
+const router  = express.Router()
+const { protect, adminOnly } = require('../middlewares/auth.middleware')
+const { strictLimiter } = require('../middlewares/rateLimit.middleware')
 const {
   subscribe,
   confirm,
@@ -7,21 +9,14 @@ const {
   getAll,
   deleteSubscriber,
 } = require('../controllers/subscriber.controller')
-const { protect,adminOnly } = require('../middlewares/auth.middleware')
-const validate = require('../middlewares/validate.middleware')
-const {
-  subscribeValidator,
-  confirmValidator,
-  unsubscribeValidator,
-} = require('../validators/subscriber.validator')
 
 // Public
-router.post('/',      subscribeValidator, validate, subscribe)
-router.get('/confirm/:token', confirmValidator, validate, confirm)
-router.post('/unsubscribe', unsubscribeValidator, validate, unsubscribe)
+router.post('/',                  strictLimiter, subscribe)
+router.get('/confirm/:token',     confirm)
+router.post('/unsubscribe',       strictLimiter, unsubscribe)
 
-// Private (Admin)
-router.get('/',               protect,adminOnly, getAll)
-router.delete('/:id',         protect,adminOnly, deleteSubscriber)
+// Admin
+router.get('/',                   protect, adminOnly, getAll)
+router.delete('/:id',             protect, adminOnly, deleteSubscriber)
 
 module.exports = router

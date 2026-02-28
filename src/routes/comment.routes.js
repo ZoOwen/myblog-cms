@@ -1,5 +1,7 @@
 const express = require('express')
-const router = express.Router()
+const router  = express.Router()
+const { protect } = require('../middlewares/auth.middleware')
+const { strictLimiter } = require('../middlewares/rateLimit.middleware')
 const {
   getCommentsByPost,
   getAllComments,
@@ -8,18 +10,15 @@ const {
   likeComment,
   deleteComment,
 } = require('../controllers/comment.controller')
-const { protect, adminOnly } = require('../middlewares/auth.middleware')
-const validate = require('../middlewares/validate.middleware')
-const { commentValidator } = require('../validators/comment.validator')
 
 // Public
-router.get('/:postId',        getCommentsByPost)
-router.post('/:postId',       commentValidator, validate, createComment)
-router.post('/:id/like',      likeComment)
+router.get('/:postId',     getCommentsByPost)
+router.post('/:postId',    strictLimiter, createComment)
+router.post('/:id/like',   strictLimiter, likeComment)
 
-// Private (admin)
-router.get('/',               protect, adminOnly, getAllComments)
-router.put('/:id/status',     protect, adminOnly, updateCommentStatus)
-router.delete('/:id',         protect, adminOnly, deleteComment)
+// Admin
+router.get('/',            protect, getAllComments)
+router.put('/:id/status',  protect, updateCommentStatus)
+router.delete('/:id',      protect, deleteComment)
 
 module.exports = router

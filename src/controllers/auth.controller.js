@@ -164,7 +164,18 @@ const changePassword = async (req, res, next) => {
     next(err)
   }
 }
-
+// @desc    Logout user
+// @route   POST /api/auth/logout
+// @access  Private
+const logout = async (req, res, next) => {
+  try {
+    // Kalau mau blacklist token, bisa simpan ke Redis/DB di sini
+    // Untuk sekarang cukup return success — client yang hapus token
+    return success(res, null, 'Logged out successfully')
+  } catch (err) {
+    next(err)
+  }
+}
 module.exports = {
   register,
   login,
@@ -172,4 +183,5 @@ module.exports = {
   refreshToken,
   updateProfile,
   changePassword,
+  logout,
 }
