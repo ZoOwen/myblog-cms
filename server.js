@@ -1,8 +1,8 @@
 require('dotenv').config()
 const app = require('./app')
 const connectDB = require('./src/config/db')
-const { PORT } = require('./src/config/env')
 
+const PORT = process.env.PORT || 3000
 const start = async () => {
   try {
     // Konek DB dulu baru nyalain server
