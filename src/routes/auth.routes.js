@@ -1,6 +1,6 @@
 const express = require('express')
 const router  = express.Router()
-const { protect } = require('../middlewares/auth.middleware')  // ✅
+const { protect } = require('../middlewares/auth.middleware')  
 const { authLimiter } = require('../middlewares/security')
 const {
   register,
@@ -13,7 +13,7 @@ const {
 } = require('../controllers/auth.controller')
 
 // Auth routes dengan brute force protection
-router.post('/register', authLimiter, register)
+// router.post('/register', authLimiter, register)
 router.post('/login',    authLimiter, login)
 router.post('/refresh',  refreshToken)
 router.post('/logout',   protect, logout)
